@@ -1,4 +1,4 @@
-# scripts
+# Scripts
 
 ## NVME Prep Script (nvme_prep.sh)
 This script is what I use to prep my NVME drives. It will:
@@ -9,7 +9,7 @@ This script is what I use to prep my NVME drives. It will:
 5. Add a fstab entry
 6. Mount the drives
 
-## Message of the Day
+## Message of the Day (motd.sh)
 A simple MOTD that can be added to Debian
 
 ```bash
