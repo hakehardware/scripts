@@ -1,7 +1,7 @@
 # Scripts
 
-## NVME Prep Script (nvme_prep.sh)
-This script is what I use to prep my NVME drives. It will:
+## NVME Prep Script Autonomys (nvme_prep.sh)
+This script is what I use to prep my NVME drives for Autonomys. It will:
 1. Wipe any partitions
 2. Format the drive in ext4
 3. Remove any reserve space
