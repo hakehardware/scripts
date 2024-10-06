@@ -56,13 +56,9 @@ prepare_drive() {
         done
     fi
 
-    # Create ext4 file system
-    echo "Creating ext4 file system on /dev/$drive..."
-    mkfs -t ext4 -F /dev/$drive
-
-    # Remove reserved space
-    echo "Removing reserved space on /dev/$drive..."
-    tune2fs -r 0 /dev/$drive
+    # Create ext4 file system - Improved thanks to vexr on Autonomays discord
+    echo "Creating ext4 file system with no reserve space on /dev/$drive..."
+    mkfs.ext4 -m 0 -T largefile4 -F /dev/$drive
 
     # Get the UUID of the formatted drive
     uuid=$(blkid -s UUID -o value /dev/$drive)
@@ -75,6 +71,10 @@ prepare_drive() {
     # Mount the drive
     echo "Mounting /dev/$drive to $mount_point..."
     mount /dev/$drive $mount_point
+
+    # Reload systemd
+    echo "Updating systemd to use new fstab"
+    sudo systemctl daemon-reload
 
     # Set ownership to nobody:nogroup
     echo "Setting ownership of $mount_point to nobody:nogroup..."
