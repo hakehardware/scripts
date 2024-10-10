@@ -46,7 +46,7 @@ while true; do
     echo "$timestamp$temp_values,$average_temp" >> "$output_file"
 
     # Print the data to the screen
-    echo "$timestamp - NVMe Temperatures: $temp_values, Avg Temp: $average_temp°C"
+    echo "$timestamp - NVME Temperatures: $temp_values, Avg Temp: $average_temp°C"
 
     # Wait for 5 seconds before next iteration
     sleep 5
