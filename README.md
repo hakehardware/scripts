@@ -16,6 +16,11 @@ A simple MOTD that can be added to Debian
 sudo nano /etc/update-motd.d/00-custom-welcome
 ```
 
+Then make it executable
+```bash
+sudo chmod +x /etc/update-motd.d/00-custom-welcome
+```
+
 Then paste in the script and save.
 
 Looks like:
