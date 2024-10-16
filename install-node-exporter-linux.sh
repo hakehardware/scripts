@@ -16,24 +16,23 @@ else
     exit 1
 fi
 
-# Fetch the latest Node Exporter release version (without the 'v' prefix for download)
+# Fetch the latest Node Exporter release version (with the 'v' prefix)
 NODE_EXPORTER_VERSION=$(curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep 'tag_name' | cut -d\" -f4)
+
+# Remove the 'v' from the version for the file name (as it doesn't have the 'v')
 NODE_EXPORTER_VERSION_NO_V=$(echo $NODE_EXPORTER_VERSION | sed 's/^v//')
 
 # Download the appropriate Node Exporter binary based on architecture
-curl -LO https://github.com/prometheus/node_exporter/releases/download/${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}.tar.gz
+curl -LO https://github.com/prometheus/node_exporter/releases/download/${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}.tar.gz
 
 # Extract the downloaded file
-tar xvf node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}.tar.gz
+tar xvf node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}.tar.gz
 
 # Move Node Exporter binary to /usr/local/bin
-sudo mv node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}/node_exporter /usr/local/bin/
-
-# Make sure the binary is executable
-sudo chmod +x /usr/local/bin/node_exporter
+sudo mv node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}/node_exporter /usr/local/bin/
 
 # Remove the downloaded files
-rm -rf node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}.tar.gz node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}
+rm -rf node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}.tar.gz node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}
 
 # Create a user for Node Exporter
 sudo useradd --no-create-home --shell /bin/false node_exporter
@@ -55,15 +54,15 @@ ExecStart=/usr/local/bin/node_exporter
 WantedBy=multi-user.target
 EOF'
 
+# Set ownership and permissions
+sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
+
 # Reload systemd to apply the new service file
 sudo systemctl daemon-reload
 
 # Start and enable Node Exporter
 sudo systemctl start node_exporter
 sudo systemctl enable node_exporter
-
-# Check the service status
-sudo systemctl status node_exporter
 
 # Verify that the service is running
 echo "Node Exporter service status:"
