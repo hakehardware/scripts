@@ -16,8 +16,9 @@ else
     exit 1
 fi
 
-# Fetch the latest Node Exporter release version
+# Fetch the latest Node Exporter release version (without the 'v' prefix for download)
 NODE_EXPORTER_VERSION=$(curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep 'tag_name' | cut -d\" -f4)
+NODE_EXPORTER_VERSION_NO_V=$(echo $NODE_EXPORTER_VERSION | sed 's/^v//')
 
 # Download the appropriate Node Exporter binary based on architecture
 curl -LO https://github.com/prometheus/node_exporter/releases/download/${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}.tar.gz
