@@ -1,56 +1,44 @@
 #!/bin/bash
 
-# Fetch the latest release version from the GitHub API (e.g., "v1.8.2")
-LATEST_RELEASE=$(curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep "tag_name" | awk -F '"' '{print $4}')
+# Update and install necessary packages
+sudo apt-get update
+sudo apt-get install -y curl
 
-# Strip the leading 'v' from the version tag (e.g., "1.8.2" instead of "v1.8.2")
-VERSION=${LATEST_RELEASE#v}
+# Detect the system architecture
+ARCH=$(uname -m)
 
-# Define the download URL for the arm64 binary (using the stripped version)
-DOWNLOAD_URL="https://github.com/prometheus/node_exporter/releases/download/${LATEST_RELEASE}/node_exporter-${VERSION}.linux-arm64.tar.gz"
-
-# Download the latest arm64 version of Node Exporter with retry mechanism
-echo "Downloading Node Exporter ${VERSION} for arm64..."
-wget -q $DOWNLOAD_URL -O node_exporter.tar.gz
-
-# Check if the download was successful
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to download Node Exporter. Exiting."
-    exit 1
-fi
-
-# Extract the downloaded tarball
-echo "Extracting Node Exporter..."
-tar -xzf node_exporter.tar.gz
-
-# Check if the extraction was successful
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to extract Node Exporter. Exiting."
-    exit 1
-fi
-
-# Move the binary to /usr/local/bin
-echo "Installing Node Exporter..."
-if [ -f node_exporter-${VERSION}.linux-arm64/node_exporter ]; then
-    sudo mv node_exporter-${VERSION}.linux-arm64/node_exporter /usr/local/bin/node_exporter
+if [[ "$ARCH" == "x86_64" ]]; then
+    ARCH_TYPE="amd64"
+elif [[ "$ARCH" == "aarch64" ]]; then
+    ARCH_TYPE="arm64"
 else
-    echo "Error: Node Exporter binary not found. Exiting."
+    echo "Unsupported architecture: $ARCH"
     exit 1
 fi
 
-# Clean up the downloaded files
-rm -rf node_exporter-${VERSION}.linux-arm64 node_exporter.tar.gz
+# Fetch the latest Node Exporter release version
+NODE_EXPORTER_VERSION=$(curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep 'tag_name' | cut -d\" -f4)
+
+# Download the appropriate Node Exporter binary based on architecture
+curl -LO https://github.com/prometheus/node_exporter/releases/download/${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}.tar.gz
+
+# Extract the downloaded file
+tar xvf node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}.tar.gz
+
+# Move Node Exporter binary to /usr/local/bin
+sudo mv node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}/node_exporter /usr/local/bin/
 
 # Make sure the binary is executable
 sudo chmod +x /usr/local/bin/node_exporter
 
-# Create a node_exporter user (without home directory and no-login shell)
-echo "Creating node_exporter user..."
+# Remove the downloaded files
+rm -rf node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}.tar.gz node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH_TYPE}
+
+# Create a user for Node Exporter
 sudo useradd --no-create-home --shell /bin/false node_exporter
 
 # Create a systemd service file for Node Exporter
-echo "Creating systemd service file for Node Exporter..."
-sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<EOL
+sudo bash -c 'cat <<EOF >/etc/systemd/system/node_exporter.service
 [Unit]
 Description=Node Exporter
 Wants=network-online.target
@@ -64,16 +52,17 @@ ExecStart=/usr/local/bin/node_exporter
 
 [Install]
 WantedBy=multi-user.target
-EOL
+EOF'
 
-# Reload systemd to recognize the new service
-echo "Reloading systemd daemon..."
+# Reload systemd to apply the new service file
 sudo systemctl daemon-reload
 
-# Enable and start the Node Exporter service
-echo "Enabling and starting Node Exporter service..."
-sudo systemctl enable node_exporter
+# Start and enable Node Exporter
 sudo systemctl start node_exporter
+sudo systemctl enable node_exporter
+
+# Check the service status
+sudo systemctl status node_exporter
 
 # Verify that the service is running
 echo "Node Exporter service status:"
