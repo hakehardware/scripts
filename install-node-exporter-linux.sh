@@ -1,4 +1,6 @@
 #!/bin/bash
+# Author: Hake Hardware
+# YouTube: https://www.youtube.com/@hakehardware
 
 # Update and install necessary packages
 sudo apt-get update
@@ -27,7 +29,7 @@ echo "Downloading Node Exporter version: $NODE_EXPORTER_VERSION"
 NODE_EXPORTER_VERSION_NO_V=$(echo $NODE_EXPORTER_VERSION | sed 's/^v//')
 
 # Download the appropriate Node Exporter binary based on architecture
-curl -LO https://github.com/prometheus/node_exporter/releases/download/${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}.tar.gz
+curl -sSLO https://github.com/prometheus/node_exporter/releases/download/${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}.tar.gz
 
 # Extract the downloaded file
 tar xvf node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}.tar.gz
