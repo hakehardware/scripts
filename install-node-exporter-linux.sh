@@ -12,12 +12,16 @@ if [[ "$ARCH" == "x86_64" ]]; then
 elif [[ "$ARCH" == "aarch64" ]]; then
     ARCH_TYPE="arm64"
 else
-    echo "Unsupported architecture: $ARCH"
+    echo "Script is not set up to support this architecture: $ARCH"
     exit 1
 fi
 
+echo "Detected $ARCH_TYPE architecture type."
+
 # Fetch the latest Node Exporter release version (with the 'v' prefix)
 NODE_EXPORTER_VERSION=$(curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep 'tag_name' | cut -d\" -f4)
+
+echo "Downloading Node Exporter version: $NODE_EXPORTER_VERSION"
 
 # Remove the 'v' from the version for the file name (as it doesn't have the 'v')
 NODE_EXPORTER_VERSION_NO_V=$(echo $NODE_EXPORTER_VERSION | sed 's/^v//')
@@ -37,6 +41,9 @@ rm -rf node_exporter-${NODE_EXPORTER_VERSION_NO_V}.linux-${ARCH_TYPE}.tar.gz nod
 # Create a user for Node Exporter
 sudo useradd --no-create-home --shell /bin/false node_exporter
 
+# Set ownership and permissions
+sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
+
 # Create a systemd service file for Node Exporter
 sudo bash -c 'cat <<EOF >/etc/systemd/system/node_exporter.service
 [Unit]
@@ -53,9 +60,6 @@ ExecStart=/usr/local/bin/node_exporter
 [Install]
 WantedBy=multi-user.target
 EOF'
-
-# Set ownership and permissions
-sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
 
 # Reload systemd to apply the new service file
 sudo systemctl daemon-reload
